@@ -1,36 +1,59 @@
 const buttons = document.querySelectorAll('.btn');
-console.log("🚀 ~ buttons:", buttons)
 const display = document.querySelector('.calculator-display');
-let val = '';
+let inputResult = '';
+const operators = ['+', '-', '*', '%', '/'];
+let decimalAdded = false;
 
 const actions = (innerText) => {
-    console.log('val', val.slice(0, 1));
-
-
-    switch (innerText) {
-        case 'RESET': {
-            val = '0'
-            break;
-        }
-        case 'DEL': {
-            val = val.slice(0, -1) || '0';
-            break;
-        }
-        default:
+    if (innerText == 'RESET') {
+        inputResult = 0;
+    } else if (innerText == 'DEL') {
+        inputResult = inputResult.slice(0, -1) || '0';
     }
-
-    display.innerText = val;
+    display.innerText = inputResult;
 }
 
-
+const calculateResult = () => {
+    try {
+        inputResult = eval(inputResult).toString();
+        if (inputResult.includes('.')) inputResult = parseFloat(inputResult).toFixed(2);
+        display.innerText = inputResult;
+    } catch (error) {
+        display.innerText = 'Error';
+    }
+};
 
 buttons.forEach((button) => {
     button.addEventListener('click', (event) => {
         const { innerText } = event.target;
-        if (['RESET', 'DEL'].includes(innerText)) actions(innerText);
+
+        //first character is operant then return
+        if (operators.includes(innerText) && inputResult.length == 0) return;
+
+        //if duplicate decimal return
+        if (innerText == '.' && decimalAdded) return;
+
+        //Replace last operator
+        if (operators.includes(innerText) && operators.includes(inputResult.slice(-1))) {
+            inputResult = inputResult.slice(0, -1) + innerText;
+            display.innerText = inputResult;
+            decimalAdded = false;
+        }
+
+        else if (innerText == '=') calculateResult();
+
+        else if (['RESET', 'DEL'].includes(innerText)) actions(innerText);
+
         else {
-            val = val + event.target.innerText;
-            display.innerText = val;
+            inputResult += innerText;
+            if (inputResult.slice(0, 1) == '0') {
+                inputResult = inputResult.slice(1);
+            }
+            if (innerText == '.') decimalAdded = true;
+
+            if (operators.includes(innerText)) decimalAdded = false;
+
+            display.innerText = inputResult;
         }
     })
 })
